@@ -7,9 +7,28 @@ exports[`renders homepage unchanged 1`] = `
       <h1>
         Crypto Exchanges List
       </h1>
+      <input
+        aria-label="Filter"
+        class="sc-eCYdqJ xVpkn"
+        placeholder="Search by name"
+      />
       <div>
+        <div
+          class="sc-dkzDqf kxVeHo"
+        >
+          <span
+            class="sc-hKMtZM glyFCT prev"
+          >
+            Previous page
+          </span>
+          <span
+            class="sc-hKMtZM fNTuAH next"
+          >
+            Next page
+          </span>
+        </div>
         <ul
-          class="sc-bczRLJ bzmYID"
+          class="sc-bczRLJ fVMwdZ"
         />
       </div>
     </main>

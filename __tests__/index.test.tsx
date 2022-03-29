@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import Home from '@/pages/index';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -12,7 +12,7 @@ const server = setupServer(
         { id: 'binance', name: 'Binance' },
         { id: 'kucoin', name: 'KuCoin' },
       ],
-      '2': {},
+      '2': [{ id: 'traderjoe', name: 'Trader Joe' }],
     };
 
     return res(ctx.json(exchanges[page]));
@@ -35,13 +35,45 @@ describe('Home', () => {
     await screen.findByText('KuCoin');
   });
 
-  // it('renders a heading', () => {
-  //   render(<Home />);
+  it('should go to the next page', async () => {
+    render(<Home />);
 
-  //   const heading = screen.getByRole('heading', {
-  //     name: /welcome to next\.js!/i,
-  //   });
+    await screen.findByText('Binance');
 
-  //   expect(heading).toBeInTheDocument();
-  // });
+    const nextButton = await screen.findByText('Next page');
+    fireEvent.click(nextButton);
+
+    await screen.findByText('Trader Joe');
+    const binance = screen.queryByText('Binance');
+    expect(binance).not.toBeInTheDocument();
+  });
+
+  it('should go to the previous page', async () => {
+    render(<Home />);
+
+    const nextButton = await screen.findByText('Next page');
+    fireEvent.click(nextButton);
+
+    await screen.findByText('Trader Joe');
+
+    const prevButton = await screen.findByText('Previous page');
+    fireEvent.click(prevButton);
+
+    await screen.findByText('Binance');
+    const traderJoe = screen.queryByText('Trader Joe');
+    expect(traderJoe).not.toBeInTheDocument();
+  });
+
+  it('should filter by name', async () => {
+    render(<Home />);
+
+    await screen.findByText('Binance');
+    await screen.findByText('KuCoin');
+
+    const searchInput = await screen.findByLabelText(/filter/i);
+    fireEvent.change(searchInput, { target: { value: 'bina' } });
+
+    screen.getByText('Binance');
+    expect(screen.queryByText('KuCoin')).not.toBeInTheDocument();
+  });
 });

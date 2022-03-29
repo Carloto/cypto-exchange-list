@@ -1,52 +1,80 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { ExchangesList } from '../components';
 import { getExchanges } from '../services';
 
-const List = styled.ul`
+const Nav = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  list-style: none;
+  gap: 20px;
+`;
 
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr;
+type ButtonProps = {
+  visible?: boolean;
+};
+
+const Button = styled.span<ButtonProps>`
+  border: 2px solid gainsboro;
+  color: gainsboro;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  visibility: ${(props) =>
+    props.visible === true || props.visible === undefined
+      ? 'visible'
+      : 'hidden'};
+
+  &:hover {
+    border-color: #000;
+    color: #000;
   }
 `;
 
-const Item = styled.li`
-  padding: 10px;
-  background-color: gainsboro;
+const Search = styled.input`
+  margin-bottom: 25px;
   border-radius: 8px;
-  display: flex;
-  flex-flow: column wrap;
-
-  & .title {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 18px;
-    font-weight: 600;
-    min-height: 50px;
-  }
+  padding: 5px 10px;
 `;
 
 export default function Home() {
+  const [page, setPage] = useState(1);
   const [exchanges, setExchanges] = useState([]);
+  const [filteredExchanges, setFilteredExchanges] = useState([]);
+  const [filterText, setFilterText] = useState('');
 
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
-      const exchanges = await getExchanges(100, 1);
+      const exchanges = await getExchanges(100, page);
       if (isMounted) setExchanges(exchanges);
     })();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page]);
+
+  useEffect(() => {
+    if (exchanges) {
+      setFilteredExchanges(
+        exchanges.filter((item: any) =>
+          item.id.toLowerCase().includes(filterText.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredExchanges([]);
+    }
+  }, [exchanges, filterText]);
+
+  function prevPage() {
+    if (page > 1) setPage(page - 1);
+  }
+
+  function nextPage() {
+    setPage(page + 1);
+  }
 
   return (
     <div>
@@ -57,30 +85,25 @@ export default function Home() {
 
       <main>
         <h1>Crypto Exchanges List</h1>
-
+        <Search
+          placeholder='Search by name'
+          aria-label='Filter'
+          onChange={(e: any) => setFilterText(e.target.value)}
+        />
         <div>
-          <List>
-            {exchanges.map((exchange: any) => (
-              <Item key={exchange.id}>
-                <a
-                  className='title'
-                  href={exchange.url}
-                  target='_blank'
-                  rel='noreferrer'
-                >
-                  {exchange.image && (
-                    <Image
-                      src={exchange.image}
-                      alt={exchange.name}
-                      width={50}
-                      height={50}
-                    />
-                  )}
-                  {exchange.name}
-                </a>
-              </Item>
-            ))}
-          </List>
+          <Nav>
+            <Button
+              className='prev'
+              visible={page > 1 ? true : false}
+              onClick={prevPage}
+            >
+              Previous page
+            </Button>
+            <Button className='next' onClick={nextPage}>
+              Next page
+            </Button>
+          </Nav>
+          <ExchangesList exchanges={filteredExchanges} />
         </div>
       </main>
     </div>
